@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>いぼ次元ラッシュ v0.10a</title>
   <style>
     body {
@@ -9,6 +10,7 @@
       background: #f7e4c9;
       font-family: "Yu Gothic", sans-serif;
       user-select: none;
+      padding-bottom: 90px;
     }
     canvas {
       display: block;
@@ -16,19 +18,49 @@
       background: #fbe9d0;
       border: 4px solid #c96;
       border-radius: 8px;
+      width: 100%;
+      height: auto;
     }
     #info {
       text-align: center;
       font-size: 14px;
       color: #444;
     }
+    #controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      gap: 8px;
+      padding: 10px;
+      box-sizing: border-box;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(4px);
+    }
+    #controls button {
+      flex: 1;
+      font-size: 16px;
+      padding: 12px 0;
+      border: 2px solid #c96;
+      border-radius: 6px;
+      background: #fff4e6;
+      color: #333;
+    }
   </style>
 </head>
 <body>
 <canvas id="game" width="800" height="480"></canvas>
 <div id="info">
-  いぼ次元ラッシュ v0.10a　
+  いぼ次元ラッシュ v0.10a
   ← →：移動　／　Space：ジャンプ　／　I：いぼミサイル　／　Enter：スタート／次へ
+</div>
+
+<div id="controls">
+  <button id="btnLeft">←</button>
+  <button id="btnRight">→</button>
+  <button id="btnJump">ジャンプ</button>
+  <button id="btnMissile">ミサイル</button>
 </div>
 
 <script>
@@ -110,11 +142,29 @@ class Fighter {
 const player = new Fighter(180, "#b673ff", false);
 const enemy  = new Fighter(620, "#f5d3a5", true);
 
+const btnLeft = document.getElementById("btnLeft");
+const btnRight = document.getElementById("btnRight");
+const btnJump = document.getElementById("btnJump");
+const btnMissile = document.getElementById("btnMissile");
+
 let missiles = [];
 let beams    = [];
 let resultText = "";
 
 // ===== 入力 =====
+function attemptJump() {
+  if (state === STATE_PLAYING && player.onGround) {
+    player.vy = PLAYER_JUMP_POWER;
+    player.onGround = false;
+  }
+}
+
+function attemptMissile() {
+  if (state === STATE_PLAYING && player.missileCooldown === 0) {
+    shootMissile();
+  }
+}
+
 document.addEventListener("keydown", e => {
   keys[e.key] = true;
 
@@ -144,13 +194,10 @@ document.addEventListener("keydown", e => {
 
   if (state === STATE_PLAYING) {
     if (e.key === " " || e.key === "Spacebar") {
-      if (player.onGround) {
-        player.vy = PLAYER_JUMP_POWER;
-        player.onGround = false;
-      }
+      attemptJump();
     }
-    if ((e.key === "i" || e.key === "I") && player.missileCooldown === 0) {
-      shootMissile();
+    if (e.key === "i" || e.key === "I") {
+      attemptMissile();
     }
   }
 });
@@ -158,6 +205,44 @@ document.addEventListener("keydown", e => {
 document.addEventListener("keyup", e => {
   keys[e.key] = false;
 });
+
+function setupTouchControls() {
+  const touchOptions = { passive: false };
+  const handleStart = key => e => {
+    e.preventDefault();
+    keys[key] = true;
+  };
+  const handleEnd = key => e => {
+    e.preventDefault();
+    keys[key] = false;
+  };
+
+  btnLeft.addEventListener("touchstart", handleStart("ArrowLeft"), touchOptions);
+  btnLeft.addEventListener("touchend", handleEnd("ArrowLeft"), touchOptions);
+
+  btnRight.addEventListener("touchstart", handleStart("ArrowRight"), touchOptions);
+  btnRight.addEventListener("touchend", handleEnd("ArrowRight"), touchOptions);
+
+  btnJump.addEventListener("touchstart", e => {
+    e.preventDefault();
+    keys[" "] = true;
+    attemptJump();
+  }, touchOptions);
+  btnJump.addEventListener("touchend", e => {
+    e.preventDefault();
+    keys[" "] = false;
+  }, touchOptions);
+
+  btnMissile.addEventListener("touchstart", e => {
+    e.preventDefault();
+    keys["I"] = true;
+    attemptMissile();
+  }, touchOptions);
+  btnMissile.addEventListener("touchend", e => {
+    e.preventDefault();
+    keys["I"] = false;
+  }, touchOptions);
+}
 
 // ===== Utility =====
 function clamp(v, min, max) {
@@ -636,6 +721,8 @@ function startGame() {
   resetGame();
   requestAnimationFrame(loop);
 }
+
+setupTouchControls();
 </script>
 </body>
 </html>
