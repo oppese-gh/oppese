@@ -83,7 +83,7 @@ class Fighter {
     this.x = x;
     this.y = GROUND_Y;
     this.w = 70;   // 当たり判定用
-    this.h = 130;
+    this.h = 150;
     this.speed = 4;
     this.colorBase = colorBase;
     this.isEnemy = isEnemy;
@@ -378,7 +378,7 @@ function shootBeam() {
 
   const r = enemy.rect();
   const bandageX = enemy.x;
-  const bandageY = r.y + r.h * 0.18;
+  const bandageY = r.y + r.h * 0.02;
 
   const startX = bandageX - 4;
   const startY = bandageY - 4;
