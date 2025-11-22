@@ -47,6 +47,27 @@
       background: #fff4e6;
       color: #333;
     }
+
+    #enterControls {
+      position: fixed;
+      bottom: 74px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 0 14px;
+      box-sizing: border-box;
+    }
+    #enterControls button {
+      width: 100%;
+      max-width: 360px;
+      font-size: 16px;
+      padding: 10px 0;
+      border: 2px solid #c96;
+      border-radius: 6px;
+      background: #ffe9d3;
+      color: #333;
+    }
   </style>
 </head>
 <body>
@@ -56,6 +77,9 @@
   ← →：移動　／　Space：ジャンプ　／　I：いぼミサイル　／　Enter：スタート／次へ
 </div>
 
+<div id="enterControls">
+  <button id="btnEnter">Enter (スタート/タイトル)</button>
+</div>
 <div id="controls">
   <button id="btnLeft">←</button>
   <button id="btnRight">→</button>
@@ -146,6 +170,7 @@ const btnLeft = document.getElementById("btnLeft");
 const btnRight = document.getElementById("btnRight");
 const btnJump = document.getElementById("btnJump");
 const btnMissile = document.getElementById("btnMissile");
+const btnEnter = document.getElementById("btnEnter");
 
 let missiles = [];
 let beams    = [];
@@ -165,6 +190,28 @@ function attemptMissile() {
   }
 }
 
+function handleEnterAction() {
+  if (state === STATE_TITLE) {
+    stage = 1;
+    resetGame();
+    state = STATE_PLAYING;
+    return;
+  }
+
+  if (state === STATE_GAMEOVER) {
+    stage = 1;
+    state = STATE_TITLE;
+    return;
+  }
+
+  if (state === STATE_STAGE_CLEAR) {
+    stage++;
+    if (stage > MAX_STAGE) stage = MAX_STAGE;
+    resetGame();
+    state = STATE_PLAYING;
+  }
+}
+
 document.addEventListener("keydown", e => {
   keys[e.key] = true;
 
@@ -173,23 +220,17 @@ document.addEventListener("keydown", e => {
   }
 
   if (state === STATE_TITLE && e.key === "Enter") {
-    stage = 1;
-    resetGame();
-    state = STATE_PLAYING;
+    handleEnterAction();
   }
 
   if (state === STATE_GAMEOVER && e.key === "Enter") {
     // タイトルに戻す
-    stage = 1;
-    state = STATE_TITLE;
+    handleEnterAction();
   }
 
   if (state === STATE_STAGE_CLEAR && e.key === "Enter") {
     // 次ステージへ
-    stage++;
-    if (stage > MAX_STAGE) stage = MAX_STAGE;
-    resetGame();
-    state = STATE_PLAYING;
+    handleEnterAction();
   }
 
   if (state === STATE_PLAYING) {
@@ -242,6 +283,15 @@ function setupTouchControls() {
     e.preventDefault();
     keys["I"] = false;
   }, touchOptions);
+
+  btnEnter.addEventListener("touchstart", e => {
+    e.preventDefault();
+    handleEnterAction();
+  }, touchOptions);
+  btnEnter.addEventListener("click", e => {
+    e.preventDefault();
+    handleEnterAction();
+  });
 }
 
 // ===== Utility =====
